@@ -61,3 +61,7 @@ A: Probably because you moved the 'config.json' or the 'erome.py' and they're no
 **Q: Why didn't the script download all of the videos in an album?**
 
 A: One possibility is that some of the videos are still being encoded, in which case you'll have to scrape it again at a later time.
+
+**Q: I received a JSONDecodeError. Help?**
+
+A: You're on Windows and you used backslashes (\) instead of forward slashes (/) for your pathname. Replace the backslashes with forward slashes.
