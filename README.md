@@ -18,11 +18,11 @@ macOS users must use pip3:
 
 `pip3 install -r requirements`
 
-Next, open the config.json in the project folder and replace "pathname" with the pathname to a folder where you would like to store EroMe content:
+Next, open the config.json in the project folder and replace "pathname" with the pathname to a folder where you would like the content to be downloaded:
 
 `{"folder_path": "pathname"}`
 
-...becomes something such as this:
+For example, it should look similar to this:
 
 `{"folder_path": "/Users/username/Downloads/EroMe"}`
 
