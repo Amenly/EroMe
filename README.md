@@ -18,13 +18,23 @@ macOS users must use pip3:
 
 `pip3 install -r requirements`
 
-Next, open the config.json in the project folder and replace "pathname" with the pathname to a folder where you would like the content to be downloaded:
+Next, open the config.json in the project folder and replace "pathname" with the path to a folder where you would like the content to be downloaded:
 
 `{"folder_path": "pathname"}`
 
 For example, it should look similar to this:
 
 `{"folder_path": "/Users/username/Downloads/EroMe"}`
+
+*Note to Windows users:*
+
+Although you're used to backslashes in your paths, you *must* use forward slashes in the config. In other words, instead of having something like:
+
+`{"folder_path": "C:\Users\username\Downloads\designated_folder}`
+
+You should change it to:
+
+`{"folder_path": "C:/Users/username/Downloads/designated_folder"}`
 
 If you're having trouble with installation, please see the [#FAQ](README.md#faq)
 
