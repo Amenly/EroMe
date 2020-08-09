@@ -57,3 +57,7 @@ A: Could be the same case as the first question. Just type 'python ' or 'python3
 **Q: Why am I getting a message saying that 'config.json' couldn't be found?**
 
 A: Probably because you moved the 'config.json' or the 'erome.py' and they're no longer in the same folder. If you lose your config, just redownload the latest release.
+
+**Q: Why didn't the script download all of the videos in an album?**
+
+A: One possibility is that some of the videos are still being encoded, in which case you'll have to scrape it again at a later time.
