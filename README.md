@@ -2,6 +2,8 @@
 
 This data scraper requires Python 3.8+
 
+This scraper will download all images and/or videos in an EroMe album. 
+
 ![concept](images/terminal.png)
 
 # Installation
