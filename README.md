@@ -2,6 +2,8 @@
 
 This data scraper requires Python 3.8+
 
+![concept](images/terminal.png)
+
 # Installation
 
 Download the latest release from the [releases page](https://github.com/Many-Trick/EroMe/releases/new).
