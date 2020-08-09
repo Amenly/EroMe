@@ -74,4 +74,4 @@ A: One possibility is that some of the videos are still being encoded, in which 
 
 **Q: I received a JSONDecodeError. Help?**
 
-A: You're on Windows and you used backslashes (\) instead of forward slashes (/) for your pathname. Replace the backslashes with forward slashes.
+A: You're on Windows and you used backslashes instead of forward slashes for your pathname. Replace the backslashes with forward slashes.
