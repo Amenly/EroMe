@@ -13,14 +13,14 @@ def check_path(path):
 
 def dir_img(path):
     dir_image = path + "/Images"
-    if os.path.isdir(dir_image) == False:
+    if not os.path.isdir(dir_image):
         os.mkdir(dir_image)
     return dir_image
 
 
 def dir_vid(path):
     dir_video = path + "/Videos"
-    if os.path.isdir(dir_video) == False:
+    if not os.path.isdir(dir_video):
         os.mkdir(dir_video)
     return dir_video
 
@@ -34,7 +34,7 @@ def dir_parent(url):
         if "/" in actual_title:
             actual_title = actual_title.replace("/", "_")
         dir_parent = main_path + "/" + actual_title
-        if os.path.isdir(dir_parent) == False:
+        if not os.path.isdir(dir_parent):
             os.mkdir(dir_parent)
         return dir_parent
 
@@ -77,12 +77,13 @@ def dl_vid(url, path):
 
 
 def main():
-    if check_path(main_path) == False:
+    if check_path(main_path) is False:
         print("Are you sure your path is correct? Please recheck your config")
     else:
         parent_path = dir_parent(url_user)
         dl_img(url_user, parent_path)
         dl_vid(url_user, parent_path)
+        print("Done")
 
 
 os.chdir(sys.path[0])
@@ -93,4 +94,3 @@ with open("config.json") as c:
 url_user = input("Enter your link here\n > ")
 if __name__ == "__main__":
     main()
-print("Done")
