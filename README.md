@@ -2,9 +2,9 @@
 
 This data scraper requires Python 3.8+
 
-This scraper will download all images and/or videos in an EroMe album. 
+This scraper will download all images and/or videos in an EroMe album and allows you to scrape all of the albums on a public profile.
 
-![concept](images/terminal.png)
+![concept](images/terminal-concept.png)
 
 # Installation
 
@@ -50,7 +50,7 @@ macOS users must use python3:
 
 `python3 erome.py`
 
-Once you run the script, you will be prompted for an EroMe album link. Enter the link and then hit 'ENTER.'
+Once you run the script, you will be prompted for either an EroMe album link or an EroMe user profile. Enter their respective number and then submit a link.
 
 # FAQ
 
