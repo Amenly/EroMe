@@ -50,28 +50,40 @@ macOS users must use python3:
 
 `python3 erome.py`
 
-Once you run the script, you will be prompted for either an EroMe album link or an EroMe user profile. Enter their respective number and then submit a link.
+Once you run the script, you will be prompted for either an EroMe album link, an EroMe user profile, or a private EroMe profile. Enter the respective number and then submit a link.
+
+If you're going to scrape a private EroMe profile, make sure to enter the email and password into the config.json.
 
 # FAQ
 
 *Note: This script was built on macOS, but I'll do my best to help Windows/Linux users.*
 
-**Q: Why do I get an error whenever I run 'pip install -r requirements.txt'?**
+<details>
+  <summary>Q: Why do I get an error whenever I run 'pip install -r requirements.txt'?</summary>
+  <br>
+  A: You either need to change your current working directory (cwd) to the directory/folder that contains the requirements.txt related to this project *or* you can just type in 'pip install -r ' in your command line and drag the requirements.txt file into the command line. If you're on macOS, remember to use pip3 instead.
+</details>
+  
+<details>  
+  <summary>Q: Why do I get an error whenever I run 'python erome.py'?</summary>
+  <br>
+  A: Could be the same case as the first question. Just type 'python ' or 'python3 ' and drag and drop the python script in the command line.
+</details>
 
-A: You either need to change your current working directory (cwd) to the directory/folder that contains the requirements.txt related to this project *or* you can just type in 'pip install -r ' in your command line and drag the requirements.txt file into the command line. If you're on macOS, remember to use pip3 instead.
+<details>
+  <summary>Q: Why am I getting a message saying that 'config.json' couldn't be found?</summary>
+  <br>
+  A: Probably because you moved the 'config.json' or the 'erome.py' and they're no longer in the same folder. If you lose your config, just redownload the latest release.
+</details>
 
-**Q: Why do I get an error whenever I run 'python erome.py'?**
+<details>
+  <summary>Q: Why didn't the script download all of the videos in an album?</summary>
+  <br>
+  A: One possibility is that some of the videos are still being encoded, in which case you'll have to scrape it again at a later time.
+</details>
 
-A: Could be the same case as the first question. Just type 'python ' or 'python3 ' and drag and drop the python script in the command line.
-
-**Q: Why am I getting a message saying that 'config.json' couldn't be found?**
-
-A: Probably because you moved the 'config.json' or the 'erome.py' and they're no longer in the same folder. If you lose your config, just redownload the latest release.
-
-**Q: Why didn't the script download all of the videos in an album?**
-
-A: One possibility is that some of the videos are still being encoded, in which case you'll have to scrape it again at a later time.
-
-**Q: I received a JSONDecodeError. Help?**
-
-A: You're on Windows and you used backslashes instead of forward slashes for your pathname. Replace the backslashes with forward slashes.
+<details>
+  <summary>Q: I received a JSONDecodeError. Help?</summary>
+  <br>
+  A: You're on Windows and you used backslashes instead of forward slashes for your pathname. Replace the backslashes with forward slashes.
+</details>
