@@ -37,7 +37,7 @@ def dir_parent(url):
         dir_parent = main_path + "/" + actual_title
         if not os.path.isdir(dir_parent):
             os.mkdir(dir_parent)
-        return dir_parent
+        return dir_parent, actual_title
 
 
 def dir_parent_profile(url):
@@ -65,7 +65,7 @@ def dir_parent_profile_album(url, path):
         dir_parent = path + "/" + actual_title
         if not os.path.isdir(dir_parent):
             os.mkdir(dir_parent)
-        return dir_parent
+        return dir_parent, actual_title
 
 
 def scr_img(url):
@@ -136,14 +136,51 @@ def profile_pages(url):
                 scrape_profile_page(changing_url)
 
 
+def start_session(url, user_agent, email, password):
+    payload = {"remember": "on"}
+    payload["email"] = email
+    payload["password"] = password
+    headers = {}
+    headers["user-agent"] = user_agent
+    login_url = "https://www.erome.com/user/login"
+    with requests.Session() as s:
+        r = s.get(login_url, headers=headers)
+        content = r.content
+        soup = BeautifulSoup(content, "html.parser")
+        token = soup.find("input", {"name": "_token"})["value"]
+        payload["_token"] = token
+        headers["referer"] = login_url
+        p = s.post(login_url, data=payload, headers=headers)
+        r = s.get(url)
+        num = 0
+        alt_url = url + "?page={}"
+        while 1:
+            num += 1
+            changing_url = alt_url.format(num)
+            r = s.get(changing_url)
+            content = r.content
+            soup = BeautifulSoup(content, "html.parser")
+            links = soup.findAll("a", {"class": "album-link"})
+            if links == []:
+                break
+            else:
+                parent_url = changing_url
+                r = s.get(changing_url)
+                content = r.content
+                soup = BeautifulSoup(content, "html.parser")
+                links = soup.findAll("a", {"class": "album-link"})
+                for link in links:
+                    album_link = link["href"]
+                    link_process_profile(album_link, parent_url)
+
+
 def scrape_profile_page(url):
     parent_url = url
     with requests.get(url) as connection:
         content = connection.content
         soup = BeautifulSoup(content, "html.parser")
         links = soup.findAll("a", {"class": "album-link"})
-        for link in (links):
-            print("Scraping album...")
+        for link in links:
             album_link = link["href"]
             link_process_profile(album_link, parent_url)
 
@@ -151,30 +188,41 @@ def scrape_profile_page(url):
 def link_process_profile(url, p_url):
     profile_path = dir_parent_profile(p_url)
     global parent_path
-    parent_path = dir_parent_profile_album(url, profile_path)
+    parent_path, actual_title = dir_parent_profile_album(url, profile_path)
+    print(f"Scraping the '{actual_title}' album")
     scr_img(url)
     scr_vid(url)
 
 
 def link_process(url):
     global parent_path
-    parent_path = dir_parent(url)
+    parent_path, actual_title = dir_parent(url)
+    print(f"Scraping the '{actual_title}' album")
     scr_img(url)
     scr_vid(url)
 
 
 def menu():
     x = -1
-    x = int(input("0 = scrape an album | 1 = scrape a profile\n> "))
+    x = int(input(
+        "0 = scrape an album | 1 = scrape a profile | 2 = scrape a private profile\n> "))
     if x == 0:
         url_user = input("Enter your link here\n> ")
         link_process(url_user)
         print("Done")
     elif x == 1:
-        profile_link = input("Enter the profile link here\n > ")
+        profile_link = input("Enter the profile link here\n> ")
         profile_link = profile_link + "?page={}"
         profile_pages(profile_link)
         print("Done")
+    elif x == 2:
+        private_profile_link = input("Enter the profile link here\n> ")
+        with open("config.json") as config:
+            settings = json.load(config)["settings"]
+            email = settings["email"]
+            password = settings["password"]
+            user_agent = settings["user_agent"]
+        start_session(private_profile_link, user_agent, email, password)
 
 
 def main():
