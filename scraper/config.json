@@ -1,5 +1,7 @@
 {
 	"settings":{
-		"folder_path": "pathname"
+		"folder_path": "pathname",
+		"user_agent": "",
+		"password": ""
 	}
 }
