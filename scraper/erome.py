@@ -2,9 +2,16 @@ import os
 import sys
 import json
 import requests
-from tqdm import tqdm
 import concurrent.futures
+
 from bs4 import BeautifulSoup
+
+
+def text_replacement(text):
+    dictionary = {'.': '_', ':': '_', '\\': '_', '/': '_'}
+    for k, v in dictionary.items():
+        text = text.replace(k, v)
+    return text
 
 
 def check_path(path):
@@ -32,8 +39,7 @@ def dir_parent(url):
         soup = BeautifulSoup(content, "html.parser")
         title = soup.find("h1")
         actual_title = title.text
-        if "/" in actual_title:
-            actual_title = actual_title.replace("/", "_")
+        actual_title = text_replacement(actual_title)
         dir_parent = main_path + "/" + actual_title
         if not os.path.isdir(dir_parent):
             os.mkdir(dir_parent)
@@ -46,8 +52,7 @@ def dir_parent_profile(url):
         soup = BeautifulSoup(content, "html.parser")
         username = soup.find("div", {"class": "col-sm-5 user-info username"})
         actual_title = username.text.strip().replace("\n FOLLOW", "")
-        if "/" in actual_title:
-            actual_title = actual_title.replace("/", "_")
+        actual_title = text_replacement(actual_title)
         dir_parent = main_path + "/" + actual_title
         if not os.path.isdir(dir_parent):
             os.mkdir(dir_parent)
@@ -60,16 +65,38 @@ def dir_parent_profile_album(url, path):
         soup = BeautifulSoup(content, "html.parser")
         title = soup.find("h1")
         actual_title = title.text
-        if "/" in actual_title:
-            actual_title = actual_title.replace("/", "_")
+        actual_title = text_replacement(actual_title)
         dir_parent = path + "/" + actual_title
         if not os.path.isdir(dir_parent):
             os.mkdir(dir_parent)
         return dir_parent, actual_title
 
 
-def scr_img(url):
+def dl_img(url, filename, index):
+    try:
+        with requests.get(url) as connection:
+            with open(os.path.join(dir_img(parent_path), filename), "wb") as f:
+                for chunk in connection.iter_content(chunk_size=50000000):
+                    f.write(chunk)
+        print(f"└── {filename} (✓) {index}/{length}")
+    except:
+        print(f"└── {filename} (✗) {index}/{length}")
+
+
+def dl_vid(url, filename, index):
+    try:
+        with requests.get(url) as connection:
+            with open(os.path.join(dir_vid(parent_path), filename), "wb") as f:
+                for chunk in connection.iter_content(chunk_size=50000000):
+                    f.write(chunk)
+        print(f"└── {filename} (✓) {index}/{length}")
+    except:
+        print(f"└── {filename} (✗) {index}/{length}")
+
+
+def scr_img(url, album_title):
     img_urls = []
+    filenames = []
     with requests.get(url) as connection:
         content = connection.content
         soup = BeautifulSoup(content, "html.parser")
@@ -80,21 +107,22 @@ def scr_img(url):
             for image in images:
                 img_url = image["data-src"]
                 img_urls.append(img_url)
-            print(f"Downloading {len(img_urls)} images...")
+                filename = img_url.split("/")[-1]
+                filenames.append(filename)
+            global length
+            length = len(img_urls)
+            img_range = range(1, length + 1)
+            print(f"{album_title}")
+            print(f"\nDownloading {length} images...")
+            print("Images")
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                list(tqdm(executor.map(dl_img, img_urls), total=len(img_urls)))
+                executor.map(dl_img, img_urls, filenames, img_range)
 
 
-def dl_img(url):
-    with requests.get(url) as connection:
-        filename = url.split("/")[-1]
-        with open(os.path.join(dir_img(parent_path), filename), "wb") as f:
-            f.write(connection.content)
-
-
-def scr_vid(url):
+def scr_vid(url, album_title):
     comparison = []
     vid_urls = []
+    filenames = []
     with requests.get(url) as connection:
         content = connection.content
         soup = BeautifulSoup(content, "html.parser")
@@ -105,20 +133,18 @@ def scr_vid(url):
             for v in videos:
                 if v not in comparison:
                     comparison.append(v)
-            print(f"Downloading {len(comparison)} videos...")
             for video in comparison:
                 vid_url = video["src"]
                 vid_urls.append(vid_url)
                 filename = vid_url.split("/")[-1]
+                filenames.append(filename)
+            global length
+            length = len(comparison)
+            vid_range = range(1, length + 1)
+            print(f"\nDownloading {length} videos...")
+            print("Videos")
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                list(tqdm(executor.map(dl_vid, vid_urls), total=len(vid_urls)))
-
-
-def dl_vid(url):
-    with requests.get(url) as connection:
-        filename = url.split("/")[-1]
-        with open(os.path.join(dir_vid(parent_path), filename), "wb") as f:
-            f.write(connection.content)
+                executor.map(dl_vid, vid_urls, filenames, vid_range)
 
 
 def profile_pages(url):
@@ -189,17 +215,17 @@ def link_process_profile(url, p_url):
     profile_path = dir_parent_profile(p_url)
     global parent_path
     parent_path, actual_title = dir_parent_profile_album(url, profile_path)
-    print(f"Scraping the '{actual_title}' album")
-    scr_img(url)
-    scr_vid(url)
+    print(f"\nScraping the '{actual_title}' album...")
+    scr_img(url, actual_title)
+    scr_vid(url, actual_title)
 
 
 def link_process(url):
     global parent_path
     parent_path, actual_title = dir_parent(url)
-    print(f"Scraping the '{actual_title}' album")
-    scr_img(url)
-    scr_vid(url)
+    print(f"\nScraping the '{actual_title}' album...")
+    scr_img(url, actual_title)
+    scr_vid(url, actual_title)
 
 
 def menu():
@@ -207,7 +233,7 @@ def menu():
     x = int(input(
         "0 = scrape an album | 1 = scrape a profile | 2 = scrape a private profile\n> "))
     if x == 0:
-        url_user = input("Enter your link here\n> ")
+        url_user = input("Enter the album link here\n> ")
         link_process(url_user)
         print("Done")
     elif x == 1:
