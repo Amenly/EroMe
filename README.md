@@ -2,7 +2,7 @@
 
 This data scraper requires Python 3.8+
 
-This scraper will download all images and/or videos in an EroMe album and allows you to scrape all of the albums on a public profile.
+This scraper will download all images and videos from albums on EroMe and will allow you to scrape all albums from profile pages. If you have the required login information, you will also be able to download private albums.
 
 ![concept](images/terminal-concept.png)
 
@@ -17,26 +17,6 @@ In the command line, run the following:
 macOS users must use pip3:
 
 `pip3 install -r requirements`
-
-Next, open the config.json in the project folder and replace "pathname" with the path to a folder where you would like the content to be downloaded:
-
-`{"folder_path": "pathname"}`
-
-For example, it should look similar to this:
-
-`{"folder_path": "/Users/username/Downloads/EroMe"}`
-
-*Note to Windows users:*
-
-Although you're used to backslashes in your paths, you *must* use forward slashes in the config. In other words, instead of having something like:
-
-`{"folder_path": "C:\Users\username\Downloads\designated_folder}`
-
-You should change it to:
-
-`{"folder_path": "C:/Users/username/Downloads/designated_folder"}`
-
-If you're having trouble with installation, please see the [#FAQ](README.md#faq)
 
 *Note: The config.json **must** be in the same folder as the erome.py*
 
@@ -54,7 +34,24 @@ Once you run the script, you will be prompted for either an EroMe album link, an
 
 If you're going to scrape a private EroMe profile, make sure to enter the email and password into the config.json.
 
-# FAQ
+
+# Options
+
+`{"User-Agent": ""}`
+
+You can choose to use a different user agent if you wish.
+
+`{"folder_path": ""}`
+
+All albums/profiles will be saved in the current working directory. Fill this field with a folder on your computer to have all content saved there instead.
+
+`{"email": ""}`
+
+`{"password": ""}`
+
+These two fields must be filled in order to be able scrape private albums from profile pages. You're probably only going to be using this to scrape your *own* private albums. But who really knows for sure? ;)
+
+# Q&A
 
 *Note: This script was built on macOS, but I'll do my best to help Windows/Linux users.*
 
@@ -86,4 +83,10 @@ If you're going to scrape a private EroMe profile, make sure to enter the email 
   <summary>Q: I received a JSONDecodeError. Help?</summary>
   <br>
   A: You're on Windows and you used backslashes instead of forward slashes for your pathname. Replace the backslashes with forward slashes.
+</details>
+
+<details>
+  <summary>Q: What's a 'private EroMe profile'?</summary>
+  <br>
+  A: Users on EroMe have the option to have their albums set to either 'public' or 'private'. If you would like to download private albums from a user's page, you can enter that user's login details into the config file and their private albums will be downloaded. If an album is set to private but you know the album URL, you will still be able to download it using the scraper's first option.
 </details>
