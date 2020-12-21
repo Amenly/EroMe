@@ -2,6 +2,8 @@
 
 # EroMe Data Scraper
 
+![PyPI Version](https://img.shields.io/pypi/v/erome?color=%23EB75FA) ![PyPI PyVersion](https://img.shields.io/pypi/pyversions/erome?color=EB75FA)
+
 A command line tool written in Python that will allow you to download albums on EroMe
 
 <img src="https://raw.githubusercontent.com/Amenly/EroMe/master/images/terminal.png" align="center">
