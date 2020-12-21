@@ -8,7 +8,7 @@ A command line tool written in Python that will allow you to download albums on 
 
 # Installation
 
-install `erome` by running:
+Install `erome` by running:
 
 ```bash
 $ pip install erome
