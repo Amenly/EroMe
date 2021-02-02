@@ -17,7 +17,7 @@ REQUIREMENTS = ['requests', 'beautifulsoup4', 'lxml', 'tqdm', 'halo']
 
 setuptools.setup(
     name='erome',
-    version='0.0.1',
+    version='1.0.0',
     author='Amenly',
     author_email='uamenly@protonmail.com',
     description='A program for downloading photos and videos from EroMe',
