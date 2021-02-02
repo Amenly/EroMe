@@ -5,6 +5,7 @@ import re
 from collections import Counter
 import argparse
 import logging
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -12,12 +13,23 @@ from tqdm import tqdm
 from halo import Halo
 
 
-class Logger:
+from .constants import HEADERS, LOGIN
+
+
+class EroMe:
     SH_FORMAT = '%(levelname)s:%(message)s'
 
-    def __init__(self):
+    def __init__(self, args, destination_path=os.getcwd(), profile_name=None,
+                 album_name=None, dir_=None, cookies=None):
+        self.destination_path = destination_path
+        self.separate = args.separate
+        self.profile_name = profile_name
+        self.album_name = album_name
+        self.dir = dir_
+        self.cookies = cookies
         self.log = logging.getLogger(__name__)
-        self.log.setLevel(logging.INFO)
+        level = logging.DEBUG if args.debug else logging.INFO
+        self.log.setLevel(level)
         if not self.log.handlers:
             formatter = logging.Formatter(fmt=self.SH_FORMAT)
             stream_handler = logging.StreamHandler()
@@ -25,35 +37,11 @@ class Logger:
             stream_handler.setFormatter(formatter)
             self.log.addHandler(stream_handler)
 
-    def error(self, message):
-        self.log.error(message, exc_info=1)
-
-
-class User(Logger):
-    def __init__(self):
-        super().__init__()
-        c = config
-        self.headers = c['headers']
-        self.payload = c['login']
-        self.destination_path = os.getcwd()
-        self.separate_file_types = False
-
-
-class EroMe(User):
-    def __init__(self, args):
-        super().__init__()
-        if args.separate:
-            self.separate_file_types = True
-        self.profile_name = None
-        self.album_name = None
-        self.dir = None
-        self.cookies = None
-
     def handle_album(self, url):
         # pylint: disable=unbalanced-tuple-unpacking
         images, videos = self.scrape_album(url)
         album_dir = self.dir
-        if self.separate_file_types:
+        if self.separate:
             if images:
                 self.dir = os.path.join(album_dir, 'Images')
                 os.makedirs(self.dir, exist_ok=True)
@@ -68,12 +56,14 @@ class EroMe(User):
                 self.prepare_download(images + videos)
 
     def scrape_album(self, item):
-        if type(item) == type(''):
+        if isinstance(item, str):
             url, album_name = item, None
         else:
             url, album_name = item[0], item[1]
-        with requests.Session() as s:
-            r = s.get(url, headers=self.headers)
+        r = self.handle_requests(url)
+        if not r:
+            self.log.error(f'Unable to view album: {url}')
+            return None
         if r.ok:
             soup = BeautifulSoup(r.content, 'lxml')
             if not album_name:
@@ -93,8 +83,10 @@ class EroMe(User):
             self.log.error(f'Received {r.status_code} status code')
 
     def get_profile(self, url):
-        with requests.Session() as s:
-            r = s.get(url, headers=self.headers)
+        r = self.handle_requests(url)
+        if not r:
+            self.log.error('Unable to view profile')
+            return None
         if r.ok:
             soup = BeautifulSoup(r.content, 'lxml')
             profile_url = soup.find('a', {'id': 'user_icon'})['href']
@@ -114,43 +106,6 @@ class EroMe(User):
         else:
             self.log.error(f'Received {r.status_code} status code')
 
-    def get_private_profile(self, url, email, password):
-        login_url = self.payload['referer']
-        with requests.Session() as s:
-            r = s.get(login_url, headers=self.headers)
-            r.close()
-            if r.ok:
-                soup = BeautifulSoup(r.content, 'lxml')
-                token = soup.find('input', {'name': '_token'})['value']
-                self.payload['_token'] = token
-                self.payload['email'] = email
-                self.payload['password'] = password
-                r = s.post(login_url, headers=self.headers, data=self.payload)
-                self.cookies = r.cookies
-                r.close()
-                if r.ok:
-                    r = s.get(url, headers=self.headers)
-                    soup = BeautifulSoup(r.content, 'lxml')
-                    profile_url = soup.find('a', {'id': 'user_icon'})['href']
-                    self.profile_name = self.clean_text(
-                        profile_url.rsplit('/', 1)[-1])
-                    pagination = soup.find('ul', {'class': 'pagination'})
-                    if pagination:
-                        profile_url_format = profile_url + '?page={}'
-                        a_tags = pagination.find_all('a')
-                        final_page = a_tags[-2]['href']
-                        final_page_number = int(final_page.rsplit('=', 1)[-1])
-                        list_pages = [
-                            profile_url_format.format(num) for num in range(1, final_page_number + 1)
-                        ]
-                    else:
-                        list_pages = [url]
-                else:
-                    self.log.error(f'Received {r.status_code} status code')
-            else:
-                self.log.error(f'Received {r.status_code} status code')
-        return list_pages
-
     def handle_pages(self, pages):
         with Halo(text=f"Scraping {self.profile_name}'s albums...", color='magenta') as spinner:
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -167,7 +122,7 @@ class EroMe(User):
         for group in media:
             *g, n = group
             self.album_name = self.clean_text(n)
-            if self.separate_file_types:
+            if self.separate:
                 img = False
                 if g[0]:
                     img = True
@@ -177,7 +132,7 @@ class EroMe(User):
                     self.dir = os.path.join(album_dir, 'Images')
                     os.makedirs(self.dir, exist_ok=True)
                     self.prepare_download(
-                        g[0], f'⒤: {self.album_name}')
+                        g[0], f'I: {self.album_name}')
                 if g[1]:
                     self.dir = os.path.join(
                         self.destination_path, self.profile_name, self.album_name)
@@ -188,7 +143,7 @@ class EroMe(User):
                         self.dir = os.path.join(album_dir, 'Videos')
                     os.makedirs(self.dir, exist_ok=True)
                     self.prepare_download(
-                        g[1], f'⒱: {self.album_name}')
+                        g[1], f'V: {self.album_name}')
             else:
                 self.dir = os.path.join(
                     self.destination_path, self.profile_name, self.album_name)
@@ -197,8 +152,10 @@ class EroMe(User):
                 self.prepare_download(g[0] + g[1])
 
     def get_profile_albums(self, url):
-        with requests.Session() as s:
-            r = s.get(url, headers=self.headers, cookies=self.cookies)
+        r = self.handle_requests(url)
+        if not r:
+            self.log.error('Unable to view profile albums')
+            return None
         if r.ok:
             soup = BeautifulSoup(r.content, 'lxml')
             album_links = soup.find_all('a', {'class': 'album-link'})
@@ -209,11 +166,6 @@ class EroMe(User):
         else:
             self.log.error(f'Received {r.status_code} status code')
 
-    def clean_text(self, string):
-        pattern = re.compile(r'[.:/\\]')
-        new_string = pattern.sub('_', string)
-        return new_string
-
     def check_dir(self, directory):
         i = 1
         while True:
@@ -222,7 +174,7 @@ class EroMe(User):
                 directory += str(i)
                 i += 1
                 if os.path.isdir(directory):
-                    pass
+                    continue
                 else:
                     return directory
             else:
@@ -243,7 +195,7 @@ class EroMe(User):
     def download(self, url):
         filename = url.rsplit('/', 1)[-1]
         with requests.Session() as s:
-            r = s.get(url, headers=self.headers)
+            r = s.get(url, headers=HEADERS)
         if r.ok:
             with open(os.path.join(self.dir, filename), 'wb') as f:
                 for chunk in r.iter_content(chunk_size=1024):
@@ -253,43 +205,68 @@ class EroMe(User):
                 f"Received {r.status_code} status code. Could not download file '{filename}'.")
             return None
 
+    def handle_requests(self, url, payload=None):
+        with requests.Session() as s:
+            if payload:
+                r = s.post(url, headers=HEADERS,
+                           data=payload, allow_redirects=True, cookies=self.cookies)
+            else:
+                r = s.get(url, headers=HEADERS,
+                          allow_redirects=True, cookies=self.cookies)
+            if r.ok:
+                count = 1
+                while count < 11:
+                    pattern = re.compile(r'The site is currently')
+                    match = re.search(pattern, r.text)
+                    if match:
+                        if payload:
+                            r = s.post(
+                                url, data=payload, allow_redirects=True, cookies=self.cookies)
+                        else:
+                            r = s.get(url, allow_redirects=True,
+                                      cookies=self.cookies)
+                        count += 1
+                        time.sleep(5)
+                        continue
+                    else:
+                        if not self.cookies:
+                            self.cookies = r.cookies
+                            if payload:
+                                self.cookies = r.cookies
+                        return r
+                return None
+
+    def debug(self, message):
+        self.log.debug(message)
+
+    def info(self, message):
+        self.log.info(message)
+
+    def error(self, message):
+        self.log.error(message, exc_info=1)
+
+    @staticmethod
+    def clean_text(string):
+        pattern = re.compile(r'[\\/:*?"<>|]')
+        new_string = pattern.sub('_', string)
+        return new_string
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'url', type=str, help='a URL to an album or profile')
     parser.add_argument(
+        '--debug', help='enables debugging for logging', action='store_true')
+    parser.add_argument(
         '-s', '--separate', help='separate files by type (images/videos)', action='store_true')
-    parser.add_argument(
-        '-e', '--email', help='email field; allows you to scrape private albums on a profile', type=str
-    )
-    parser.add_argument(
-        '-p', '--password', help='password field; allows you to scrape private albums on a profile', type=str)
     args = parser.parse_args()
     erome = EroMe(args)
-    url = args.url
-    album = '/a/' in url
-    email, password = args.email, args.password
-    if album:
-        erome.handle_album(url)
-    elif email and password:
-        pages = erome.get_private_profile(url, email, password)
-        erome.handle_pages(pages)
+    if '/a/' in args.url:
+        erome.handle_album(args.url)
     else:
-        pages = erome.get_profile(url)
+        pages = erome.get_profile(args.url)
         erome.handle_pages(pages)
-
-
-config = {
-    'headers': {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
-
-    },
-    'login': {
-        'remember': 'on',
-        'referer': 'https://www.erome.com/user/login'
-    }
-}
 
 
 if __name__ == '__main__':
