@@ -45,12 +45,6 @@ You can also pass in flags for additional features.
 
 -s --separate       Separates files by type into their own folder. For example,
                     'Images' and 'Videos.'
-
--e --email          A required flag for scraping private albums from accounts. After typing
-                    this, you must type that account's email address.
-
--p --password       A required flag for scraping private albums from accounts. After typing this,
-                    you must type that account's password.
 ```
 
 ## Examples of using flags
@@ -61,16 +55,10 @@ If you want files to be sorted into their own folders by type:
 $ erome https://erome.com/a/xxxxxxxx -s
 ```
 
-If you want to scrape private albums from an account (*you must know that account's login details*):
-
-```bash
-$ erome https://erome.com/anonuser -e anonuser@gmail.com -p 1234
-```
-
 The order of the flags does not matter, and you have the option to type them out in full:
 
 ```bash
-$ erome https://erome.com/anonuser --password 1234 --separate --email anonuser@gmail.com
+$ erome https://erome.com/anonuser --separate
 ```
 
 # Q&A
@@ -79,10 +67,4 @@ $ erome https://erome.com/anonuser --password 1234 --separate --email anonuser@g
   <summary>Q: Why didn't the script download all of the videos in an album?</summary>
   <br>
   A: One possibility is that some of the videos are still being encoded, in which case you'll have to scrape it again at a later time.
-</details>
-
-<details>
-  <summary>Q: Why won't it accept my email/password?</summary>
-  <br>
-  A: If it's not accepting your email or your password, try wrapping them with single quotes: -e 'anonuser@gmail.com' -p '1234'
 </details>
